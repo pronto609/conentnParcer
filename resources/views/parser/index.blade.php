@@ -13,6 +13,11 @@
 @endif
 
 {!! Form::open(['route' => 'parser.process']) !!}
+<select name="format[]">
+    @foreach ($formats as $format)
+        <option value="{{ $format }}">{{ $format }}</option>
+    @endforeach
+</select>
 <select name="databases[]" multiple>
     @foreach ($databases as $database)
         <option value="{{ $database }}">{{ $database->getFilename() }}</option>
