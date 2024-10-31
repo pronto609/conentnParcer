@@ -1,41 +1,43 @@
 <?php
 
 namespace App\Services;
-use iamcal\SQLParser;
-use marcocesarato\sqlparser\LightSQLParser;
-use Illuminate\Support\Facades\File;
-use PHPSQLParser\PHPSQLParser;
+
+use App\Services\Helper\TmpSaveHandler;
+
 class ContentParser
 {
+    public function __construct(
+        private \App\Services\JsonParser $jsonParser,
+        private TmpSaveHandler $fileHandler
+    ) {
+    }
+
     public function parse($databasePaths)
     {
         foreach ($databasePaths as $dbPath) {
             $this->parseInsertToJson($dbPath);
-
+            $this->jsonParser->parse();
         }
+        die();
     }
 
-    private function parseInsertToJson(string $dbPath)
+    /**
+     * @param string $dbPath
+     * @return void
+     */
+    private function parseInsertToJson(string $dbPath): void
     {
-        $inputHandle = fopen($dbPath, 'r');
-        if (!$inputHandle) {
-            die("Не вдалося відкрити файл для читання.");
-        }
+        $this->fileHandler->openFileForRead($dbPath);
 
-        $outputFile = storage_path('dumps/tmpdumps') . '/' . File::name($dbPath) . '.json';
-        $outputHandle = fopen($outputFile, 'w');
-        if (!$outputHandle) {
-            fclose($inputHandle);
-            die("Не вдалося відкрити JSON файл для запису.");
-        }
+        $this->fileHandler->openFileForWrite( storage_path(SaveConfig::TMP_DUMPS_PATH) .'/'.pathinfo($dbPath, PATHINFO_FILENAME) . '.json');
 
-        fwrite($outputHandle, "{\n");
+        $this->fileHandler->writeContent("{\n");
 
         $currentQuery = '';
         $isInInsert = false;
         $firstTableEntry = true;
 
-        while (($line = fgets($inputHandle)) !== false) {
+        while (($line = $this->fileHandler->readLine()) !== false) {
             if (stripos($line, 'INSERT INTO') !== false) {
                 $isInInsert = true;
             }
@@ -45,64 +47,59 @@ class ContentParser
 
                 if (preg_match('/\);\s*$/', trim($line))) {
                     if (!$firstTableEntry) {
-                        fwrite($outputHandle, ",\n");
+                        $this->fileHandler->writeContent(",\n");
                     }
                     $firstTableEntry = false;
 
-                    $this->processInsertQuery($currentQuery, $outputHandle);
+                    $this->processInsertQuery($currentQuery);
                     $currentQuery = '';
                     $isInInsert = false;
                 }
             }
         }
 
-        fwrite($outputHandle, "\n}");
+        $this->fileHandler->writeContent("\n}");
 
-        fclose($inputHandle);
-        fclose($outputHandle);
-
-        echo "Дані успішно збережені у JSON файл: $outputFile";
-        die();
-
+        $this->fileHandler->closeFiles();
     }
 
-    private function processInsertQuery(string $query, $outputHandle)
+    private function processInsertQuery(string $query)
     {
         if (preg_match('/^INSERT INTO `([^`]+)` \(([^)]+)\) VALUES/i', $query, $matches)) {
             $tableName = $matches[1];
-            $columns = explode(', ', str_replace('`', '', $matches[2])); // Видаляємо лапки з колонок
+            $columns = explode(', ', str_replace('`', '', $matches[2]));
 
-            fwrite($outputHandle, '"' . $tableName . '": [');
+            $this->fileHandler->writeContent('"' . $tableName . '": [');
 
             $firstRow = true;
 
             preg_match_all('/(?<=VALUES).*?(?<=;$)/s', $query, $valueMatches);
 
             foreach ($valueMatches[0] as $valueString) {
+                $valueString = preg_replace('/^\n\(|\);\s*$/', '', $valueString);
                 $rows = preg_split('/\)(\\n|\\t)?,(\\n|\\t)?\(/', $valueString);
                 foreach ($rows as $row) {
                     if (!$firstRow) {
-                        fwrite($outputHandle, ",");
+                        $this->fileHandler->writeContent(",");
                     }
                     $firstRow = false;
 
                     $values = preg_split('/,\t/', $row);
                     $values = array_map(function ($value) {
-                        return trim($value, "'`"); // Прибираємо лапки з кожного значення
+                        return trim($value, "'`");
                     }, $values);
 
                     if (count($columns) === count($values)) {
                         $rowData = array_combine($columns, $values);
-                        fwrite($outputHandle, json_encode($rowData, JSON_UNESCAPED_UNICODE));
+                        $this->fileHandler->writeContent(json_encode($rowData, JSON_UNESCAPED_UNICODE));
                     } else {
                         echo "Невідповідність між кількістю колонок та значень у рядку: $valueString\n";
                     }
                 }
             }
 
-            fwrite($outputHandle, "]");
+            $this->fileHandler->writeContent("]");
         }
     }
-
-
 }
+
