@@ -13,16 +13,24 @@
 @endif
 
 {!! Form::open(['route' => 'parser.process']) !!}
+<h3>В один файл</h3>
+<select name="merge[]">
+    @foreach ($mergedOptions as $value => $name)
+        <option value="{{ $value }}">{{ $name }}</option>
+    @endforeach
+</select><br>
+<h3>Формат</h3>
 <select name="format[]">
     @foreach ($formats as $format)
         <option value="{{ $format }}">{{ $format }}</option>
     @endforeach
-</select>
+</select><br>
+<h3>Вибрати бази для парсингу</h3>
 <select name="databases[]" multiple>
     @foreach ($databases as $database)
         <option value="{{ $database }}">{{ $database->getFilename() }}</option>
     @endforeach
-</select>
+</select><br>
 <button type="submit">Парсити</button>
 {!! Form::close() !!}
 </body>

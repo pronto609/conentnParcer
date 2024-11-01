@@ -12,8 +12,9 @@ class ParserController extends Controller
     public function index()
     {
         $databases = $this->getDatabaseDumps();
-        $formats = ['csv', 'text', 'xtml'];
-        return view('parser.index', compact('databases', 'formats'));
+        $mergedOptions = ['no', 'yes'];
+        $formats = ['csv', 'text', 'xml'];
+        return view('parser.index', compact('databases', 'formats', 'mergedOptions'));
     }
 
     public function process(
@@ -23,10 +24,12 @@ class ParserController extends Controller
     )
     {
         $selectedDatabases = $request->input('databases');
-        $saveHandler->setFormat(collect($request->input('format'))->first());
-
-        $parseData = $contentParser->parse($selectedDatabases);
-        $saveHandler->save($parseData);
+        $contentParser->parse($selectedDatabases);
+        $format = collect($request->input('format'))->first();
+        $merged = collect($request->input('merge'))->first();
+        $saveHandler->setFormat($format);
+        $saveHandler->setMerged($merged);
+        $saveHandler->save();
 
         return redirect()->back()->with('success', 'Парсинг завершено');
     }

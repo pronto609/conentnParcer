@@ -17,8 +17,8 @@ class ContentParser
         foreach ($databasePaths as $dbPath) {
             $this->parseInsertToJson($dbPath);
             $this->jsonParser->parse();
+            $this->fileHandler->cleanDirectory(storage_path(\App\Services\SaveConfig::TMP_DUMPS_PATH));
         }
-        die();
     }
 
     /**

@@ -63,13 +63,11 @@ class TmpSaveHandler
         if ($this->outputHandler) fclose($this->outputHandler);
     }
 
-    public function deleteOutputFile()
+    public function cleanDirectory(string $directoryPath)
     {
-        if ($this->outputFilePath && File::exists($this->outputFilePath)) {
-            File::delete($this->outputFilePath);
-            echo "Файл {$this->outputFilePath} успішно видалено.\n";
-        } else {
-            echo "Файл для видалення не знайдено.\n";
+        $files = File::files($directoryPath);
+        foreach ($files as $file) {
+            File::delete($file);
         }
     }
 }
