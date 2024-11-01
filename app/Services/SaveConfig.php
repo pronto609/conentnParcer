@@ -5,7 +5,7 @@ namespace App\Services;
 class SaveConfig
 {
     const TMP_DUMPS_PATH = 'dumps/tmpdumps';
-    const DUMPS_PATH = 'dumps';
+    const DUMPS_PATH = 'app/dumps';
 
     const RES_DUMPS_PATH = 'dumps/res';
     const RESULT_FILES_PATH = 'app/public';

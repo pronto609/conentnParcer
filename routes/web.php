@@ -15,3 +15,5 @@ use App\Http\Controllers\ParserController;
 
 Route::get('/', [ParserController::class, 'index'])->name('parser.index');
 Route::post('/process', [ParserController::class, 'process'])->name('parser.process');
+Route::post('/loaddb', [ParserController::class, 'loaddb'])->name('parser.loaddb');
+Route::get('/download/file', [ParserController::class, 'downloadFile'])->name('download.file');

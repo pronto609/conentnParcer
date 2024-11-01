@@ -29,14 +29,17 @@ class SaveHandler
         $this->merged = $merged;
     }
 
-    public function save(): void
+    public function save(): array
     {
         $files = File::files(storage_path(SaveConfig::RES_DUMPS_PATH));
+        $lastGeneratedFiles = [];
         foreach ($files as $file) {
             $data = Items::fromFile($file->getPathname(), ['decoder' => new ExtJsonDecoder(true)]);
-            $this->{$this->format . 'Handler'}->save($data, $this->merged, $file, SaveConfig::COLUMNS_SAVED);
+            $lastFiles = $this->{$this->format . 'Handler'}->save($data, $this->merged, $file, SaveConfig::COLUMNS_SAVED);
+            $lastGeneratedFiles = array_merge($lastGeneratedFiles, $lastFiles);
         }
         $this->{$this->format . 'Handler'}->closeFile();
         $this->tmpSaveHandler->cleanDirectory(storage_path(SaveConfig::RES_DUMPS_PATH));
+        return $lastGeneratedFiles;
     }
 }
