@@ -73,8 +73,9 @@ class XmlHandler implements \App\Services\Helper\SaveHandlerInterface
             foreach ($data as $info) {
                 $this->writeContent($info);
             }
+            return $generatedFilesPath;
         } catch (\Exception $exception) {
-            //TODO lod exception
+            return [];
         }
     }
 }

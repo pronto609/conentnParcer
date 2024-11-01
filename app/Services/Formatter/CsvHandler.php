@@ -2,7 +2,6 @@
 
 namespace App\Services\Formatter;
 
-use Illuminate\Support\Facades\File;
 use JsonMachine\Items;
 
 class CsvHandler implements \App\Services\Helper\SaveHandlerInterface
@@ -59,7 +58,7 @@ class CsvHandler implements \App\Services\Helper\SaveHandlerInterface
             }
             return $generatedFilesPath;
         } catch (\Exception $exception) {
-            //TODO lod exception
+            return [];
         }
 
     }

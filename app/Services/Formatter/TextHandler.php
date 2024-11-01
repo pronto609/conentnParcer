@@ -59,7 +59,7 @@ class TextHandler implements \App\Services\Helper\SaveHandlerInterface
             }
             return $generatedFilesPath;
         } catch (\Exception $exception) {
-            //TODO lod exception
+            return [];
         }
     }
 }
